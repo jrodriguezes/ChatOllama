@@ -1,0 +1,6 @@
+Los sockets permiten que Java y Python se comuniquen en tiempo real a traves de una conexion
+cliente-servidor
+
+Python actaa como el servidor, procesando las solicitudes del chatbot y enviando respuestas
+Java actua como el cliente, enviando mensajes y recibiendo respuestas del servidor Python
+

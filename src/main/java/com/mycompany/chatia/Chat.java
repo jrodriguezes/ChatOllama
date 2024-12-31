@@ -9,6 +9,8 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.io.File;
 import javax.swing.JFileChooser;
+import java.io.*;
+import java.net.*;
 
 /**
  *
@@ -18,8 +20,7 @@ public class Chat extends javax.swing.JFrame {
 
     JFileChooser Selector = new JFileChooser();
     File File;
-    
-    
+
     public Chat() {
         initComponents();
         TxA_ChatBot.setEditable(false);
@@ -60,7 +61,9 @@ public class Chat extends javax.swing.JFrame {
         TxA_ChatBot.setColumns(20);
         TxA_ChatBot.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
         TxA_ChatBot.setForeground(new java.awt.Color(255, 255, 255));
+        TxA_ChatBot.setLineWrap(true);
         TxA_ChatBot.setRows(5);
+        TxA_ChatBot.setWrapStyleWord(true);
         TxA_ChatBot.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
         jScrollPane1.setViewportView(TxA_ChatBot);
 
@@ -76,6 +79,30 @@ public class Chat extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    public String Send_To_Python(String userMessage) {
+        String Response = "";
+        try {
+
+            Socket Socket = new Socket("localhost", 8080);
+
+            // Enviar mensaje al servidor
+            PrintWriter Out = new PrintWriter(Socket.getOutputStream(), true);
+            Out.println(userMessage);
+
+            // Leer respuesta del servidor
+            BufferedReader In = new BufferedReader(new InputStreamReader(Socket.getInputStream()));
+            Response = In.readLine();
+
+            // Cerrar conexion
+            Out.close();
+            In.close();
+            Socket.close();
+        } catch (IOException e) {
+            Response = "Error al conectar con el servidor Python: " + e.getMessage();
+        }
+        return Response;
+    }
 
     private void ActionListeners() {
         Txt_UserChat.addFocusListener(new FocusListener() {
@@ -96,8 +123,20 @@ public class Chat extends javax.swing.JFrame {
             }
         }
         );
-    }
 
+        Txt_UserChat.addActionListener(e -> {
+            String User_Message = Txt_UserChat.getText().trim();
+            if (!User_Message.isEmpty()) {
+                TxA_ChatBot.append("Tú: " + User_Message + "\n");
+                Txt_UserChat.setText("");
+
+                // Enviar mensaje a Python y obtener respuesta
+                String Bot_Response = Send_To_Python(User_Message);
+                TxA_ChatBot.append("Llama: " + Bot_Response + "\n");
+            }
+        });
+
+    }
 
     /**
      * @param args the command line arguments
@@ -131,6 +170,7 @@ public class Chat extends javax.swing.JFrame {
             public void run() {
                 new Chat().setVisible(true);
             }
+
         });
     }
 

@@ -79,7 +79,7 @@ public class Chat extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-//
+
     public String Send_To_Python(String userMessage) {
         StringBuilder Response = new StringBuilder();
         try {

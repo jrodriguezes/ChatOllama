@@ -81,7 +81,7 @@ public class Chat extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     public String Send_To_Python(String userMessage) {
-        String Response = "";
+        StringBuilder Response = new StringBuilder();
         try {
 
             Socket Socket = new Socket("localhost", 8080);
@@ -92,16 +92,19 @@ public class Chat extends javax.swing.JFrame {
 
             // Leer respuesta del servidor
             BufferedReader In = new BufferedReader(new InputStreamReader(Socket.getInputStream()));
-            Response = In.readLine();
+            String line;
+            while ((line = In.readLine()) != null) {
+                Response.append(line).append("\n");
+            }
 
             // Cerrar conexion
             Out.close();
             In.close();
             Socket.close();
         } catch (IOException e) {
-            Response = "Error al conectar con el servidor Python: " + e.getMessage();
+            Response.append("Error al conectar con el servidor Python: ").append(e.getMessage());
         }
-        return Response;
+        return Response.toString().trim(); // Trim elimina el salto de linea extra al final
     }
 
     private void ActionListeners() {
@@ -124,18 +127,32 @@ public class Chat extends javax.swing.JFrame {
         }
         );
 
+        // Evento al presionar Enter en el campo de texto
         Txt_UserChat.addActionListener(e -> {
             String User_Message = Txt_UserChat.getText().trim();
             if (!User_Message.isEmpty()) {
+                // Mostrar mensaje del usuario
                 TxA_ChatBot.append("Tú: " + User_Message + "\n");
                 Txt_UserChat.setText("");
 
                 // Enviar mensaje a Python y obtener respuesta
                 String Bot_Response = Send_To_Python(User_Message);
-                TxA_ChatBot.append("Llama: " + Bot_Response + "\n");
+
+                // Mostrar respuesta progresivamente
+                new Thread(() -> {
+                    for (char c : Bot_Response.toCharArray()) {
+                        TxA_ChatBot.append(String.valueOf(c));
+                        try {
+                            Thread.sleep(50); // Controla la velocidad de escritura (50 ms por carácter)
+                        } catch (InterruptedException ex) {
+                            Thread.currentThread().interrupt();
+                            break;
+                        }
+                    }
+                    TxA_ChatBot.append("\n");
+                }).start();
             }
         });
-
     }
 
     /**
